@@ -1,0 +1,522 @@
+{
+  "_metadata": {
+    "description": "Comprehensive edge case test data for HTTP server robustness testing",
+    "version": "1.0.0",
+    "purpose": "Enable boundary value analysis and equivalence partitioning testing approaches per Section 6.6.1.3",
+    "categories": [
+      "malformed_requests",
+      "protocol_violations", 
+      "boundary_conditions",
+      "invalid_headers",
+      "unusual_methods",
+      "connection_edge_cases",
+      "payload_edge_cases"
+    ]
+  },
+  
+  "malformed_requests": {
+    "description": "HTTP requests with syntactic errors and protocol violations",
+    "test_cases": [
+      {
+        "name": "missing_http_version",
+        "description": "HTTP request without version specification",
+        "raw_request": "GET /test\r\nHost: localhost:3000\r\n\r\n",
+        "expected_behavior": "server_handles_gracefully",
+        "test_category": "protocol_violation"
+      },
+      {
+        "name": "invalid_http_version",
+        "description": "HTTP request with unsupported version",
+        "raw_request": "GET /test HTTP/3.0\r\nHost: localhost:3000\r\n\r\n",
+        "expected_behavior": "server_handles_gracefully",
+        "test_category": "protocol_violation"
+      },
+      {
+        "name": "malformed_request_line",
+        "description": "Request line with invalid spacing",
+        "raw_request": "GET/test HTTP/1.1\r\nHost: localhost:3000\r\n\r\n",
+        "expected_behavior": "server_handles_gracefully",
+        "test_category": "syntax_error"
+      },
+      {
+        "name": "missing_host_header",
+        "description": "HTTP/1.1 request without required Host header",
+        "raw_request": "GET /test HTTP/1.1\r\nConnection: close\r\n\r\n",
+        "expected_behavior": "server_handles_gracefully",
+        "test_category": "protocol_violation"
+      },
+      {
+        "name": "incomplete_request",
+        "description": "Request terminated before completion",
+        "raw_request": "GET /test HTTP/1.1\r\nHost: localhost:3000\r\nContent-Length: 100\r\n\r\nincomplete",
+        "expected_behavior": "server_handles_gracefully",
+        "test_category": "incomplete_data"
+      },
+      {
+        "name": "double_crlf_in_headers",
+        "description": "Headers with embedded CRLF sequences",
+        "raw_request": "GET /test HTTP/1.1\r\nHost: localhost:3000\r\nX-Test: value\r\n\r\nwith-crlf\r\n\r\n",
+        "expected_behavior": "server_handles_gracefully",
+        "test_category": "header_injection"
+      }
+    ]
+  },
+
+  "protocol_violations": {
+    "description": "Requests that violate HTTP protocol specifications",
+    "test_cases": [
+      {
+        "name": "invalid_method_characters",
+        "description": "HTTP method with invalid characters",
+        "method": "G@T",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000"
+        },
+        "expected_behavior": "server_handles_gracefully",
+        "violation_type": "invalid_method_syntax"
+      },
+      {
+        "name": "method_with_spaces",
+        "description": "HTTP method containing spaces",
+        "method": "G ET",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000"
+        },
+        "expected_behavior": "server_handles_gracefully",
+        "violation_type": "invalid_method_syntax"
+      },
+      {
+        "name": "url_with_null_bytes",
+        "description": "Request URL containing null bytes",
+        "method": "GET",
+        "path": "/test\u0000path",
+        "headers": {
+          "Host": "localhost:3000"
+        },
+        "expected_behavior": "server_handles_gracefully",
+        "violation_type": "invalid_url_characters"
+      },
+      {
+        "name": "control_characters_in_headers",
+        "description": "Headers containing control characters",
+        "method": "GET",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "X-Control": "value\u0001with\u0002control\u0003chars"
+        },
+        "expected_behavior": "server_handles_gracefully",
+        "violation_type": "invalid_header_characters"
+      },
+      {
+        "name": "header_without_colon",
+        "description": "Header line missing colon separator",
+        "raw_request": "GET /test HTTP/1.1\r\nHost localhost:3000\r\nValid-Header: value\r\n\r\n",
+        "expected_behavior": "server_handles_gracefully",
+        "violation_type": "malformed_header"
+      }
+    ]
+  },
+
+  "boundary_conditions": {
+    "description": "Test cases for system limits and boundary values",
+    "test_cases": [
+      {
+        "name": "maximum_url_length",
+        "description": "Request with extremely long URL",
+        "method": "GET",
+        "path": "/" + "a".repeat(8192),
+        "headers": {
+          "Host": "localhost:3000"
+        },
+        "expected_behavior": "server_handles_gracefully",
+        "boundary_type": "url_length_limit"
+      },
+      {
+        "name": "maximum_header_count",
+        "description": "Request with excessive number of headers",
+        "method": "GET",
+        "path": "/test",
+        "headers": Object.fromEntries(
+          Array.from({length: 1000}, (_, i) => [`X-Header-${i}`, `value${i}`])
+        ),
+        "expected_behavior": "server_handles_gracefully",
+        "boundary_type": "header_count_limit"
+      },
+      {
+        "name": "oversized_header_value",
+        "description": "Single header with extremely large value",
+        "method": "GET",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "X-Large-Header": "x".repeat(65536)
+        },
+        "expected_behavior": "server_handles_gracefully",
+        "boundary_type": "header_value_size"
+      },
+      {
+        "name": "zero_length_components",
+        "description": "Request with empty/zero-length components",
+        "method": "GET",
+        "path": "",
+        "headers": {
+          "Host": "localhost:3000",
+          "X-Empty": ""
+        },
+        "expected_behavior": "server_handles_gracefully",
+        "boundary_type": "empty_values"
+      },
+      {
+        "name": "maximum_request_size",
+        "description": "Request approaching maximum size limits",
+        "method": "POST",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "Content-Type": "text/plain",
+          "Content-Length": "1048576"
+        },
+        "body": "x".repeat(1048576),
+        "expected_behavior": "server_handles_gracefully",
+        "boundary_type": "request_size_limit"
+      }
+    ]
+  },
+
+  "invalid_headers": {
+    "description": "Headers with various formatting and content violations",
+    "test_cases": [
+      {
+        "name": "header_with_leading_spaces",
+        "description": "Header name with leading whitespace",
+        "raw_request": "GET /test HTTP/1.1\r\nHost: localhost:3000\r\n    Spaced-Header: value\r\n\r\n",
+        "expected_behavior": "server_handles_gracefully",
+        "header_issue": "leading_whitespace"
+      },
+      {
+        "name": "header_with_unicode",
+        "description": "Header containing Unicode characters",
+        "method": "GET",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "X-Unicode": "value-with-émojis-🚀-and-ünïcødé"
+        },
+        "expected_behavior": "server_handles_gracefully",
+        "header_issue": "non_ascii_characters"
+      },
+      {
+        "name": "duplicate_host_headers",
+        "description": "Multiple Host headers in single request",
+        "raw_request": "GET /test HTTP/1.1\r\nHost: localhost:3000\r\nHost: example.com\r\n\r\n",
+        "expected_behavior": "server_handles_gracefully",
+        "header_issue": "duplicate_critical_header"
+      },
+      {
+        "name": "folded_headers",
+        "description": "Headers using obsolete line folding",
+        "raw_request": "GET /test HTTP/1.1\r\nHost: localhost:3000\r\nX-Folded: first-part\r\n second-part\r\n\r\n",
+        "expected_behavior": "server_handles_gracefully",
+        "header_issue": "obsolete_folding"
+      },
+      {
+        "name": "header_injection_attempt",
+        "description": "Header value containing CRLF injection",
+        "method": "GET",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "X-Injection": "value\r\nInjected-Header: malicious"
+        },
+        "expected_behavior": "server_handles_gracefully",
+        "header_issue": "crlf_injection"
+      }
+    ]
+  },
+
+  "unusual_methods": {
+    "description": "Non-standard and edge case HTTP methods",
+    "test_cases": [
+      {
+        "name": "undefined_method",
+        "description": "Custom HTTP method not in specifications",
+        "method": "CUSTOM",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000"
+        },
+        "expected_behavior": "server_responds_normally",
+        "method_type": "custom_method"
+      },
+      {
+        "name": "webdav_methods",
+        "description": "WebDAV extension methods",
+        "methods": ["PROPFIND", "PROPPATCH", "MKCOL", "COPY", "MOVE", "LOCK", "UNLOCK"],
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000"
+        },
+        "expected_behavior": "server_responds_normally",
+        "method_type": "webdav_extension"
+      },
+      {
+        "name": "case_sensitive_methods",
+        "description": "HTTP methods with mixed case",
+        "test_variations": [
+          {
+            "method": "get",
+            "case_type": "lowercase"
+          },
+          {
+            "method": "Get", 
+            "case_type": "mixed_case"
+          },
+          {
+            "method": "POST",
+            "case_type": "uppercase"
+          }
+        ],
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000"
+        },
+        "expected_behavior": "server_responds_normally",
+        "method_type": "case_variation"
+      },
+      {
+        "name": "extremely_long_method",
+        "description": "HTTP method exceeding reasonable length",
+        "method": "VERYLONGMETHODNAME".repeat(10),
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000"
+        },
+        "expected_behavior": "server_handles_gracefully",
+        "method_type": "length_boundary"
+      },
+      {
+        "name": "method_with_numbers",
+        "description": "HTTP method containing numeric characters",
+        "method": "GET2",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000"
+        },
+        "expected_behavior": "server_responds_normally",
+        "method_type": "alphanumeric_method"
+      }
+    ]
+  },
+
+  "connection_edge_cases": {
+    "description": "Network connection and protocol edge cases",
+    "test_cases": [
+      {
+        "name": "connection_close_immediate",
+        "description": "Client closes connection immediately after request",
+        "method": "GET",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "Connection": "close"
+        },
+        "connection_behavior": "immediate_close",
+        "expected_behavior": "server_handles_gracefully"
+      },
+      {
+        "name": "keep_alive_violations",
+        "description": "Keep-alive protocol violations",
+        "method": "GET",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "Connection": "keep-alive",
+          "Keep-Alive": "timeout=1, max=1000"
+        },
+        "connection_behavior": "keep_alive_test",
+        "expected_behavior": "server_handles_gracefully"
+      },
+      {
+        "name": "slow_request_sending",
+        "description": "Request sent with artificial delays",
+        "method": "POST",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "Content-Length": "100"
+        },
+        "body": "slow data",
+        "sending_pattern": "slow_bytes",
+        "expected_behavior": "server_handles_gracefully"
+      },
+      {
+        "name": "concurrent_connection_limits",
+        "description": "Testing server behavior at connection limits",
+        "method": "GET",
+        "path": "/test",
+        "concurrent_connections": 1000,
+        "headers": {
+          "Host": "localhost:3000"
+        },
+        "expected_behavior": "server_handles_gracefully",
+        "test_type": "stress_test"
+      }
+    ]
+  },
+
+  "payload_edge_cases": {
+    "description": "Request body and payload edge cases",
+    "test_cases": [
+      {
+        "name": "content_length_mismatch",
+        "description": "Content-Length header doesn't match actual body size",
+        "method": "POST",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "Content-Type": "text/plain",
+          "Content-Length": "100"
+        },
+        "body": "actual body is shorter",
+        "expected_behavior": "server_handles_gracefully",
+        "payload_issue": "length_mismatch"
+      },
+      {
+        "name": "missing_content_length",
+        "description": "POST request without Content-Length header",
+        "method": "POST",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "Content-Type": "text/plain"
+        },
+        "body": "body without content length",
+        "expected_behavior": "server_handles_gracefully",
+        "payload_issue": "missing_length"
+      },
+      {
+        "name": "binary_payload",
+        "description": "Request with binary data payload",
+        "method": "POST",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "Content-Type": "application/octet-stream",
+          "Content-Length": "256"
+        },
+        "body_binary": Array.from({length: 256}, (_, i) => i % 256),
+        "expected_behavior": "server_handles_gracefully",
+        "payload_issue": "binary_data"
+      },
+      {
+        "name": "chunked_encoding_edge_cases",
+        "description": "Transfer-Encoding chunked with edge cases",
+        "method": "POST",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "Transfer-Encoding": "chunked"
+        },
+        "chunked_body": [
+          {"size": "0", "data": ""},
+          {"size": "5", "data": "hello"},
+          {"size": "0", "data": ""}
+        ],
+        "expected_behavior": "server_handles_gracefully",
+        "payload_issue": "chunked_encoding"
+      },
+      {
+        "name": "multipart_boundaries",
+        "description": "Malformed multipart boundary conditions",
+        "method": "POST",
+        "path": "/test",
+        "headers": {
+          "Host": "localhost:3000",
+          "Content-Type": "multipart/form-data; boundary=----WebKitFormBoundary"
+        },
+        "body": "------WebKitFormBoundary\r\nContent-Disposition: form-data; name=\"field\"\r\n\r\nvalue\r\n------WebKitFormBoundary--\r\n",
+        "expected_behavior": "server_handles_gracefully",
+        "payload_issue": "multipart_data"
+      }
+    ]
+  },
+
+  "response_validation_edge_cases": {
+    "description": "Edge cases for validating server response consistency",
+    "test_cases": [
+      {
+        "name": "response_under_load",
+        "description": "Verify consistent response under high request load",
+        "method": "GET",
+        "path": "/test",
+        "concurrent_requests": 100,
+        "expected_response": {
+          "status": 200,
+          "body": "Hello, World!\n",
+          "headers": {
+            "content-type": "text/plain"
+          }
+        },
+        "validation_type": "consistency_under_load"
+      },
+      {
+        "name": "response_timing_consistency",
+        "description": "Verify response timing remains consistent",
+        "method": "GET",
+        "path": "/test",
+        "timing_requirements": {
+          "max_response_time_ms": 50,
+          "response_time_variance": 10
+        },
+        "expected_behavior": "consistent_timing",
+        "validation_type": "performance_consistency"
+      },
+      {
+        "name": "response_after_malformed_requests",
+        "description": "Verify server continues normal operation after malformed requests",
+        "test_sequence": [
+          {
+            "type": "malformed",
+            "raw_request": "INVALID REQUEST FORMAT"
+          },
+          {
+            "type": "normal",
+            "method": "GET",
+            "path": "/test",
+            "headers": {"Host": "localhost:3000"}
+          }
+        ],
+        "expected_behavior": "normal_response_after_error",
+        "validation_type": "recovery_validation"
+      }
+    ]
+  },
+
+  "test_configuration": {
+    "description": "Configuration parameters for edge case testing",
+    "server_config": {
+      "hostname": "127.0.0.1",
+      "port": 3000,
+      "expected_response": "Hello, World!\n",
+      "expected_status": 200,
+      "expected_content_type": "text/plain"
+    },
+    "test_execution_config": {
+      "timeout_ms": 5000,
+      "retry_attempts": 3,
+      "concurrent_connection_limit": 1000,
+      "max_request_size_bytes": 1048576,
+      "socket_timeout_ms": 10000
+    },
+    "validation_rules": {
+      "require_consistent_response": true,
+      "require_status_200": true,
+      "require_content_type_header": true,
+      "allow_connection_errors": true,
+      "track_response_timing": true
+    }
+  }
+}
