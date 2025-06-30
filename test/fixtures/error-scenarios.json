@@ -1,0 +1,403 @@
+{
+  "portConflictScenarios": {
+    "description": "Test scenarios for port binding conflicts when target port is already in use",
+    "scenarios": [
+      {
+        "id": "port-3000-occupied",
+        "name": "Port 3000 Already In Use",
+        "description": "Simulate server startup failure when port 3000 is already occupied by another process",
+        "setup": {
+          "preoccupyPort": true,
+          "targetPort": 3000,
+          "targetHost": "127.0.0.1",
+          "conflictProcess": "mock-server"
+        },
+        "expectedError": {
+          "code": "EADDRINUSE",
+          "message": "listen EADDRINUSE: address already in use :::3000",
+          "alternativeMessages": [
+            "listen EADDRINUSE :::3000",
+            "bind EADDRINUSE 127.0.0.1:3000",
+            "listen EADDRINUSE 127.0.0.1:3000"
+          ]
+        },
+        "expectedBehavior": {
+          "processExits": true,
+          "exitCode": 1,
+          "timeoutMs": 5000,
+          "noServerStartup": true,
+          "consoleOutput": false
+        },
+        "testValidation": {
+          "verifyErrorCode": true,
+          "verifyErrorMessage": true,
+          "verifyProcessTermination": true,
+          "verifyNoPortBinding": true
+        }
+      },
+      {
+        "id": "rapid-port-conflict",
+        "name": "Rapid Sequential Port Conflicts",
+        "description": "Test multiple rapid attempts to bind to occupied port",
+        "setup": {
+          "preoccupyPort": true,
+          "targetPort": 3000,
+          "targetHost": "127.0.0.1",
+          "rapidAttempts": 3,
+          "attemptIntervalMs": 100
+        },
+        "expectedError": {
+          "code": "EADDRINUSE",
+          "message": "listen EADDRINUSE: address already in use :::3000",
+          "consistentFailure": true
+        },
+        "expectedBehavior": {
+          "processExits": true,
+          "exitCode": 1,
+          "allAttemptsFail": true,
+          "noRecovery": true
+        },
+        "testValidation": {
+          "verifyConsistentFailure": true,
+          "verifyNoPortLeakage": true,
+          "verifyQuickFailure": true
+        }
+      }
+    ]
+  },
+  "networkBindingFailures": {
+    "description": "Test scenarios for network interface binding failures and network-related errors",
+    "scenarios": [
+      {
+        "id": "invalid-host-binding",
+        "name": "Invalid Host Interface Binding",
+        "description": "Test server behavior when attempting to bind to non-existent or invalid network interface",
+        "setup": {
+          "targetPort": 3000,
+          "targetHost": "999.999.999.999",
+          "invalidInterface": true
+        },
+        "expectedError": {
+          "code": "EADDRNOTAVAIL",
+          "message": "listen EADDRNOTAVAIL: address not available",
+          "alternativeMessages": [
+            "getaddrinfo ENOTFOUND 999.999.999.999",
+            "bind EADDRNOTAVAIL 999.999.999.999:3000"
+          ]
+        },
+        "expectedBehavior": {
+          "processExits": true,
+          "exitCode": 1,
+          "immediateFailure": true,
+          "noServerStartup": true
+        },
+        "testValidation": {
+          "verifyInvalidAddressHandling": true,
+          "verifyErrorPropagation": true,
+          "verifyCleanTermination": true
+        }
+      },
+      {
+        "id": "permission-denied-binding",
+        "name": "Permission Denied for Port Binding",
+        "description": "Simulate permission errors when binding to restricted ports (theoretical scenario)",
+        "setup": {
+          "targetPort": 80,
+          "targetHost": "127.0.0.1",
+          "simulatePermissionDenied": true
+        },
+        "expectedError": {
+          "code": "EACCES",
+          "message": "listen EACCES: permission denied",
+          "alternativeMessages": [
+            "bind EACCES: permission denied 127.0.0.1:80"
+          ]
+        },
+        "expectedBehavior": {
+          "processExits": true,
+          "exitCode": 1,
+          "privilegeErrorHandling": true
+        },
+        "testValidation": {
+          "verifyPermissionHandling": true,
+          "verifySecurityErrorResponse": true
+        }
+      },
+      {
+        "id": "network-interface-unavailable",
+        "name": "Network Interface Temporarily Unavailable",
+        "description": "Test handling when network interface becomes unavailable during startup",
+        "setup": {
+          "targetPort": 3000,
+          "targetHost": "127.0.0.1",
+          "networkUnavailable": true,
+          "transientFailure": true
+        },
+        "expectedError": {
+          "code": "ENETUNREACH",
+          "message": "listen ENETUNREACH: network is unreachable",
+          "alternativeMessages": [
+            "connect ENETUNREACH 127.0.0.1:3000"
+          ]
+        },
+        "expectedBehavior": {
+          "processExits": true,
+          "exitCode": 1,
+          "networkErrorHandling": true
+        },
+        "testValidation": {
+          "verifyNetworkErrorHandling": true,
+          "verifyErrorRecovery": false
+        }
+      }
+    ]
+  },
+  "processTerminationScenarios": {
+    "description": "Test scenarios for server process termination and signal handling",
+    "scenarios": [
+      {
+        "id": "startup-termination-sigint",
+        "name": "SIGINT During Server Startup",
+        "description": "Test graceful handling of SIGINT signal during server initialization",
+        "setup": {
+          "targetPort": 3000,
+          "targetHost": "127.0.0.1",
+          "signalDuringStartup": "SIGINT",
+          "signalDelayMs": 50
+        },
+        "expectedBehavior": {
+          "processExits": true,
+          "exitCode": 0,
+          "gracefulShutdown": true,
+          "cleanupResources": true
+        },
+        "testValidation": {
+          "verifySignalHandling": true,
+          "verifyGracefulTermination": true,
+          "verifyResourceCleanup": true
+        }
+      },
+      {
+        "id": "startup-termination-sigterm",
+        "name": "SIGTERM During Server Startup",
+        "description": "Test graceful handling of SIGTERM signal during server initialization",
+        "setup": {
+          "targetPort": 3000,
+          "targetHost": "127.0.0.1",
+          "signalDuringStartup": "SIGTERM",
+          "signalDelayMs": 75
+        },
+        "expectedBehavior": {
+          "processExits": true,
+          "exitCode": 0,
+          "gracefulShutdown": true,
+          "cleanupResources": true
+        },
+        "testValidation": {
+          "verifySignalHandling": true,
+          "verifyGracefulTermination": true,
+          "verifyResourceCleanup": true
+        }
+      },
+      {
+        "id": "uncaught-exception-during-startup",
+        "name": "Uncaught Exception During Startup",
+        "description": "Test handling of unexpected exceptions during server initialization",
+        "setup": {
+          "targetPort": 3000,
+          "targetHost": "127.0.0.1",
+          "triggerException": true,
+          "exceptionType": "TypeError",
+          "exceptionMessage": "Cannot read property of undefined"
+        },
+        "expectedBehavior": {
+          "processExits": true,
+          "exitCode": 1,
+          "ungracefulTermination": true,
+          "errorLogging": true
+        },
+        "testValidation": {
+          "verifyExceptionHandling": true,
+          "verifyErrorLogging": true,
+          "verifyProcessTermination": true
+        }
+      }
+    ]
+  },
+  "resourceExhaustionScenarios": {
+    "description": "Test scenarios for resource exhaustion and system limit conditions",
+    "scenarios": [
+      {
+        "id": "file-descriptor-exhaustion",
+        "name": "File Descriptor Limit Exceeded",
+        "description": "Simulate file descriptor exhaustion preventing server socket creation",
+        "setup": {
+          "targetPort": 3000,
+          "targetHost": "127.0.0.1",
+          "exhaustFileDescriptors": true,
+          "fdLimit": 1024
+        },
+        "expectedError": {
+          "code": "EMFILE",
+          "message": "listen EMFILE: too many open files",
+          "alternativeMessages": [
+            "EMFILE: too many open files, open",
+            "socket creation failed: too many open files"
+          ]
+        },
+        "expectedBehavior": {
+          "processExits": true,
+          "exitCode": 1,
+          "resourceLimitError": true,
+          "systemErrorHandling": true
+        },
+        "testValidation": {
+          "verifyResourceLimitHandling": true,
+          "verifySystemErrorResponse": true,
+          "verifyErrorRecovery": false
+        }
+      },
+      {
+        "id": "memory-exhaustion-startup",
+        "name": "Memory Exhaustion During Startup",
+        "description": "Test server behavior under extreme memory pressure during initialization",
+        "setup": {
+          "targetPort": 3000,
+          "targetHost": "127.0.0.1",
+          "simulateMemoryPressure": true,
+          "memoryLimitMB": 50
+        },
+        "expectedError": {
+          "code": "ENOMEM",
+          "message": "cannot allocate memory",
+          "alternativeMessages": [
+            "JavaScript heap out of memory",
+            "FATAL ERROR: Ineffective mark-compacts near heap limit"
+          ]
+        },
+        "expectedBehavior": {
+          "processExits": true,
+          "exitCode": 134,
+          "memoryErrorHandling": true,
+          "emergencyTermination": true
+        },
+        "testValidation": {
+          "verifyMemoryErrorHandling": true,
+          "verifyEmergencyShutdown": true
+        }
+      }
+    ]
+  },
+  "edgeCaseErrorScenarios": {
+    "description": "Test scenarios for edge cases and boundary conditions during server startup",
+    "scenarios": [
+      {
+        "id": "concurrent-startup-attempts",
+        "name": "Concurrent Server Startup Attempts",
+        "description": "Test behavior when multiple server instances attempt to start simultaneously",
+        "setup": {
+          "targetPort": 3000,
+          "targetHost": "127.0.0.1",
+          "concurrentInstances": 3,
+          "startupRaceCondition": true
+        },
+        "expectedBehavior": {
+          "oneSuccessfulStartup": true,
+          "multipleFailures": true,
+          "raceConditionHandling": true,
+          "portContentionResolution": true
+        },
+        "testValidation": {
+          "verifySingleSuccessfulBind": true,
+          "verifyMultipleFailures": true,
+          "verifyCleanFailureHandling": true
+        }
+      },
+      {
+        "id": "startup-timeout-scenario",
+        "name": "Server Startup Timeout",
+        "description": "Test handling of server startup timeout scenarios",
+        "setup": {
+          "targetPort": 3000,
+          "targetHost": "127.0.0.1",
+          "simulateSlowStartup": true,
+          "startupTimeoutMs": 10000,
+          "expectedTimeoutMs": 5000
+        },
+        "expectedBehavior": {
+          "processExits": true,
+          "exitCode": 1,
+          "timeoutHandling": true,
+          "startupAbortion": true
+        },
+        "testValidation": {
+          "verifyTimeoutHandling": true,
+          "verifyStartupAbortion": true,
+          "verifyTimeoutErrorMessage": true
+        }
+      },
+      {
+        "id": "invalid-port-range",
+        "name": "Invalid Port Number Range",
+        "description": "Test server behavior with invalid port numbers (edge case for configuration errors)",
+        "setup": {
+          "targetPort": 99999,
+          "targetHost": "127.0.0.1",
+          "invalidPortRange": true
+        },
+        "expectedError": {
+          "code": "EADDRINUSE",
+          "message": "listen EADDRINUSE",
+          "alternativeMessages": [
+            "RangeError: Port should be >= 0 and < 65536",
+            "Invalid port number"
+          ]
+        },
+        "expectedBehavior": {
+          "processExits": true,
+          "exitCode": 1,
+          "configurationErrorHandling": true
+        },
+        "testValidation": {
+          "verifyConfigurationErrorHandling": true,
+          "verifyPortValidation": true
+        }
+      }
+    ]
+  },
+  "testingMetadata": {
+    "version": "1.0.0",
+    "description": "Comprehensive error scenario definitions for Node.js HTTP server testing",
+    "purpose": "Provides structured test data for validating server error handling, process termination, and edge case behaviors as required by comprehensive testing strategy Section 6.6",
+    "usage": {
+      "testFramework": "Jest or Mocha with Supertest",
+      "implementationNotes": [
+        "Each scenario provides setup instructions for simulating error conditions",
+        "Expected error codes and messages support multiple Node.js versions and platforms",
+        "Validation criteria ensure comprehensive error handling coverage",
+        "Scenarios support both unit and integration testing approaches"
+      ]
+    },
+    "references": {
+      "technicalSpecification": "Section 6.6 TESTING STRATEGY",
+      "functionalRequirements": "Section 2.2.7 Feature F-007 Comprehensive Server Test Suite Requirements",
+      "errorHandlingPatterns": "Section 5.4.3 Error Handling Patterns",
+      "summaryOfChanges": "Section 0.2 Error handling scenarios including port conflicts and binding failures"
+    },
+    "supportedErrorCodes": [
+      "EADDRINUSE",
+      "EADDRNOTAVAIL", 
+      "EACCES",
+      "ENETUNREACH",
+      "EMFILE",
+      "ENOMEM"
+    ],
+    "testCoverage": {
+      "portConflicts": "Complete coverage of port binding conflicts and resolution",
+      "networkFailures": "Network interface binding failures and invalid address handling",
+      "processSignals": "SIGINT, SIGTERM, and uncaught exception handling during startup",
+      "resourceLimits": "File descriptor and memory exhaustion scenarios",
+      "edgeCases": "Concurrent startup attempts, timeouts, and configuration errors"
+    }
+  }
+}
