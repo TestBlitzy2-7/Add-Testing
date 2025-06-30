@@ -1,0 +1,447 @@
+{
+  "description": "HTTP request templates for comprehensive server testing across all supported methods",
+  "server_config": {
+    "hostname": "127.0.0.1",
+    "port": 3000,
+    "expected_response": "Hello, World!\n",
+    "expected_status": 200,
+    "expected_content_type": "text/plain"
+  },
+  "standard_methods": {
+    "GET": {
+      "basic": {
+        "method": "GET",
+        "path": "/",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Accept": "*/*"
+        },
+        "description": "Basic GET request to root path"
+      },
+      "with_query": {
+        "method": "GET",
+        "path": "/search?q=test&limit=10",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Accept": "application/json"
+        },
+        "description": "GET request with query parameters"
+      },
+      "nested_path": {
+        "method": "GET",
+        "path": "/api/v1/users/123",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Accept": "application/json",
+          "Authorization": "Bearer test-token"
+        },
+        "description": "GET request to nested API path with auth header"
+      }
+    },
+    "POST": {
+      "json_payload": {
+        "method": "POST",
+        "path": "/api/users",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "body": {
+          "name": "Test User",
+          "email": "test@example.com",
+          "age": 25
+        },
+        "description": "POST request with JSON payload"
+      },
+      "form_data": {
+        "method": "POST",
+        "path": "/submit",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "name=John+Doe&email=john%40example.com&message=Hello+World",
+        "description": "POST request with form-encoded data"
+      },
+      "empty_body": {
+        "method": "POST",
+        "path": "/ping",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Content-Type": "application/json"
+        },
+        "body": null,
+        "description": "POST request with empty body"
+      }
+    },
+    "PUT": {
+      "update_resource": {
+        "method": "PUT",
+        "path": "/api/users/123",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer test-token"
+        },
+        "body": {
+          "name": "Updated User",
+          "email": "updated@example.com",
+          "active": true
+        },
+        "description": "PUT request to update a resource"
+      },
+      "create_or_replace": {
+        "method": "PUT",
+        "path": "/documents/report.pdf",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Content-Type": "application/octet-stream",
+          "Content-Length": "1024"
+        },
+        "body": "binary-data-placeholder",
+        "description": "PUT request to create or replace a document"
+      }
+    },
+    "DELETE": {
+      "delete_resource": {
+        "method": "DELETE",
+        "path": "/api/users/123",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Authorization": "Bearer test-token"
+        },
+        "description": "DELETE request to remove a resource"
+      },
+      "bulk_delete": {
+        "method": "DELETE",
+        "path": "/api/users?ids=123,456,789",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Authorization": "Bearer admin-token"
+        },
+        "description": "DELETE request with query parameters for bulk operations"
+      }
+    },
+    "PATCH": {
+      "partial_update": {
+        "method": "PATCH",
+        "path": "/api/users/123",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer test-token"
+        },
+        "body": {
+          "active": false
+        },
+        "description": "PATCH request for partial resource update"
+      },
+      "json_patch": {
+        "method": "PATCH",
+        "path": "/api/documents/456",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Content-Type": "application/json-patch+json"
+        },
+        "body": [
+          {
+            "op": "replace",
+            "path": "/title",
+            "value": "New Title"
+          },
+          {
+            "op": "add",
+            "path": "/tags/-",
+            "value": "important"
+          }
+        ],
+        "description": "PATCH request using JSON Patch format"
+      }
+    },
+    "OPTIONS": {
+      "cors_preflight": {
+        "method": "OPTIONS",
+        "path": "/api/users",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Origin": "https://example.com",
+          "Access-Control-Request-Method": "POST",
+          "Access-Control-Request-Headers": "Content-Type, Authorization"
+        },
+        "description": "OPTIONS request for CORS preflight check"
+      },
+      "api_discovery": {
+        "method": "OPTIONS",
+        "path": "/api",
+        "headers": {
+          "User-Agent": "test-client/1.0"
+        },
+        "description": "OPTIONS request for API capability discovery"
+      }
+    }
+  },
+  "edge_case_requests": {
+    "unusual_methods": {
+      "HEAD": {
+        "method": "HEAD",
+        "path": "/",
+        "headers": {
+          "User-Agent": "test-client/1.0"
+        },
+        "description": "HEAD request to check resource without body"
+      },
+      "TRACE": {
+        "method": "TRACE",
+        "path": "/",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Max-Forwards": "0"
+        },
+        "description": "TRACE request for diagnostic purposes"
+      }
+    },
+    "unusual_paths": {
+      "very_long_path": {
+        "method": "GET",
+        "path": "/api/v1/organizations/12345/departments/engineering/teams/backend/projects/microservices/services/user-management/endpoints/health-check",
+        "headers": {
+          "User-Agent": "test-client/1.0"
+        },
+        "description": "Request with extremely long nested path"
+      },
+      "special_characters": {
+        "method": "GET",
+        "path": "/test/path%20with%20spaces/and-special-chars!@#$%25",
+        "headers": {
+          "User-Agent": "test-client/1.0"
+        },
+        "description": "Request with URL-encoded special characters"
+      },
+      "unicode_path": {
+        "method": "GET",
+        "path": "/测试/ユーザー/пользователь",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Accept-Charset": "utf-8"
+        },
+        "description": "Request with Unicode characters in path"
+      }
+    },
+    "unusual_headers": {
+      "large_headers": {
+        "method": "GET",
+        "path": "/",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "X-Large-Header": "a".repeat(1000),
+          "X-Custom-Token": "very-long-token-".repeat(50)
+        },
+        "description": "Request with unusually large header values"
+      },
+      "many_headers": {
+        "method": "GET",
+        "path": "/",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "X-Header-01": "value1",
+          "X-Header-02": "value2",
+          "X-Header-03": "value3",
+          "X-Header-04": "value4",
+          "X-Header-05": "value5",
+          "X-Header-06": "value6",
+          "X-Header-07": "value7",
+          "X-Header-08": "value8",
+          "X-Header-09": "value9",
+          "X-Header-10": "value10",
+          "X-Header-11": "value11",
+          "X-Header-12": "value12",
+          "X-Header-13": "value13",
+          "X-Header-14": "value14",
+          "X-Header-15": "value15"
+        },
+        "description": "Request with many custom headers"
+      },
+      "case_variations": {
+        "method": "GET",
+        "path": "/",
+        "headers": {
+          "user-agent": "test-client/1.0",
+          "Content-type": "application/json",
+          "AUTHORIZATION": "Bearer test-token",
+          "Accept-ENCODING": "gzip, deflate"
+        },
+        "description": "Request with mixed case header names"
+      }
+    },
+    "payload_variations": {
+      "large_json": {
+        "method": "POST",
+        "path": "/api/data",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "data": "x".repeat(5000),
+          "metadata": {
+            "description": "Large payload test",
+            "size": 5000,
+            "nested": {
+              "level1": {
+                "level2": {
+                  "level3": {
+                    "content": "deeply nested content"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "POST request with large JSON payload"
+      },
+      "malformed_json": {
+        "method": "POST",
+        "path": "/api/data",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Content-Type": "application/json"
+        },
+        "body_raw": "{\"name\": \"test\", \"incomplete\": ",
+        "description": "POST request with malformed JSON (missing closing brace)"
+      },
+      "empty_content_type": {
+        "method": "POST",
+        "path": "/api/data",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Content-Type": ""
+        },
+        "body": "some data without proper content type",
+        "description": "POST request with empty Content-Type header"
+      }
+    }
+  },
+  "performance_test_requests": {
+    "concurrent_templates": [
+      {
+        "method": "GET",
+        "path": "/",
+        "headers": {
+          "User-Agent": "concurrent-test-client/1.0",
+          "X-Request-ID": "concurrent-{id}"
+        },
+        "description": "Template for concurrent GET requests"
+      },
+      {
+        "method": "POST",
+        "path": "/api/ping",
+        "headers": {
+          "User-Agent": "concurrent-test-client/1.0",
+          "Content-Type": "application/json",
+          "X-Request-ID": "concurrent-{id}"
+        },
+        "body": {
+          "timestamp": "{timestamp}",
+          "test_id": "{id}"
+        },
+        "description": "Template for concurrent POST requests"
+      }
+    ],
+    "stress_test": {
+      "rapid_fire": {
+        "method": "GET",
+        "path": "/health",
+        "headers": {
+          "User-Agent": "stress-test-client/1.0",
+          "Connection": "keep-alive"
+        },
+        "description": "Template for rapid successive requests"
+      }
+    }
+  },
+  "error_condition_requests": {
+    "connection_tests": {
+      "keep_alive": {
+        "method": "GET",
+        "path": "/",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Connection": "keep-alive"
+        },
+        "description": "Request with keep-alive connection"
+      },
+      "close_connection": {
+        "method": "GET",
+        "path": "/",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Connection": "close"
+        },
+        "description": "Request with explicit connection close"
+      }
+    },
+    "timeout_scenarios": {
+      "long_request": {
+        "method": "POST",
+        "path": "/api/process",
+        "headers": {
+          "User-Agent": "test-client/1.0",
+          "Content-Type": "application/json",
+          "X-Expected-Processing-Time": "30000"
+        },
+        "body": {
+          "operation": "long-running-task",
+          "duration": 30000
+        },
+        "description": "Request that might trigger timeout scenarios"
+      }
+    }
+  },
+  "test_utilities": {
+    "assertion_templates": {
+      "standard_assertions": {
+        "status_code": 200,
+        "content_type": "text/plain",
+        "response_body": "Hello, World!\n",
+        "response_encoding": "utf8"
+      },
+      "performance_assertions": {
+        "max_response_time_ms": 50,
+        "max_startup_time_ms": 100,
+        "max_request_processing_time_ms": 10
+      }
+    },
+    "test_data_generators": {
+      "random_string": {
+        "pattern": "random",
+        "length": "{length}",
+        "charset": "alphanumeric"
+      },
+      "timestamp": {
+        "format": "iso8601",
+        "example": "2024-01-01T00:00:00.000Z"
+      },
+      "uuid": {
+        "format": "uuid4",
+        "example": "12345678-1234-1234-1234-123456789012"
+      }
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "created_for": "Comprehensive HTTP server testing per Section 6.6 Testing Strategy",
+    "compatible_frameworks": ["Jest", "Mocha", "Supertest"],
+    "usage_note": "These templates provide comprehensive test data for validating server responses across all HTTP methods and edge cases as required by the testing specification",
+    "coverage_areas": [
+      "Standard HTTP methods (GET, POST, PUT, DELETE, PATCH, OPTIONS)",
+      "Edge case HTTP methods (HEAD, TRACE)",
+      "Various request paths and query parameters",
+      "Different request headers and payloads",
+      "Performance testing scenarios",
+      "Error condition simulation",
+      "Concurrent request testing",
+      "Malformed request handling"
+    ]
+  }
+}
