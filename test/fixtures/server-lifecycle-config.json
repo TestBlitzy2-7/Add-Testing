@@ -1,0 +1,294 @@
+{
+  "serverConfiguration": {
+    "hostname": "127.0.0.1",
+    "port": 3000,
+    "protocol": "http",
+    "baseUrl": "http://127.0.0.1:3000"
+  },
+  "startupConfiguration": {
+    "timeouts": {
+      "maxStartupTime": 100,
+      "startupTimeUnit": "milliseconds",
+      "portBindingTimeout": 50,
+      "consoleOutputTimeout": 25
+    },
+    "expectedConsoleOutput": {
+      "pattern": "Server running at http://127.0.0.1:3000/",
+      "exactMatch": true,
+      "encoding": "utf8",
+      "validateTimestamp": false
+    },
+    "startupValidation": {
+      "portBindingRequired": true,
+      "consoleOutputRequired": true,
+      "processReadyStateRequired": true,
+      "validateServerResponse": true
+    },
+    "successCriteria": {
+      "portBound": true,
+      "consoleMessageDisplayed": true,
+      "serverAcceptingConnections": true,
+      "startupTimeWithinThreshold": true
+    }
+  },
+  "shutdownConfiguration": {
+    "gracefulShutdown": {
+      "enabled": true,
+      "timeout": 5000,
+      "timeoutUnit": "milliseconds",
+      "signals": ["SIGTERM", "SIGINT"],
+      "forceShutdownAfterTimeout": true
+    },
+    "resourceCleanup": {
+      "closeActiveConnections": true,
+      "releasePortBinding": true,
+      "cleanupEventListeners": true,
+      "validateProcessTermination": true
+    },
+    "shutdownValidation": {
+      "portReleased": true,
+      "processTerminated": true,
+      "noZombieProcesses": true,
+      "cleanupCompleted": true
+    }
+  },
+  "errorScenarios": {
+    "portConflict": {
+      "enabled": true,
+      "testDescription": "Simulate server startup when port 3000 is already in use",
+      "expectedErrorCode": "EADDRINUSE",
+      "expectedErrorMessage": "listen EADDRINUSE",
+      "expectImmediateFailure": true,
+      "maxErrorDetectionTime": 50,
+      "timeUnit": "milliseconds"
+    },
+    "bindingFailure": {
+      "enabled": true,
+      "testDescription": "Test network interface binding failures",
+      "scenarios": [
+        {
+          "type": "invalidHostname",
+          "hostname": "invalid.hostname.test",
+          "expectedError": "ENOTFOUND"
+        },
+        {
+          "type": "privilegedPort",
+          "port": 80,
+          "expectedError": "EACCES"
+        }
+      ]
+    },
+    "processTermination": {
+      "enabled": true,
+      "testDescription": "Validate process termination handling",
+      "scenarios": [
+        {
+          "signal": "SIGTERM",
+          "expectedBehavior": "gracefulShutdown",
+          "timeout": 5000
+        },
+        {
+          "signal": "SIGINT",
+          "expectedBehavior": "gracefulShutdown",
+          "timeout": 5000
+        },
+        {
+          "signal": "SIGKILL",
+          "expectedBehavior": "forceTermination",
+          "timeout": 1000
+        }
+      ]
+    }
+  },
+  "performanceThresholds": {
+    "startup": {
+      "maxStartupTime": 100,
+      "unit": "milliseconds",
+      "description": "Server initialization from start to ready state"
+    },
+    "responseGeneration": {
+      "maxResponseTime": 10,
+      "unit": "milliseconds",
+      "description": "Time to generate static response content"
+    },
+    "endToEndResponse": {
+      "maxResponseTime": 50,
+      "unit": "milliseconds",
+      "description": "Complete request-response cycle time"
+    },
+    "errorDetection": {
+      "maxErrorDetectionTime": 50,
+      "unit": "milliseconds",
+      "description": "Time to detect and report error conditions"
+    },
+    "concurrentConnections": {
+      "minSupportedConnections": 50,
+      "description": "Minimum concurrent connections for load testing"
+    }
+  },
+  "testingConfiguration": {
+    "lifecycle": {
+      "isolationRequired": true,
+      "cleanupBetweenTests": true,
+      "validateInitialState": true,
+      "validateFinalState": true
+    },
+    "retry": {
+      "maxRetries": 3,
+      "retryDelay": 100,
+      "retryDelayUnit": "milliseconds",
+      "exponentialBackoff": false
+    },
+    "validation": {
+      "strictMode": true,
+      "validateAllCriteria": true,
+      "failOnFirstError": false,
+      "collectAllErrors": true
+    }
+  },
+  "edgeCases": {
+    "connectionLimits": {
+      "enabled": true,
+      "testConcurrentConnections": 100,
+      "maxConnectionsBeforeFailure": 1000,
+      "description": "Test server behavior under connection stress"
+    },
+    "malformedRequests": {
+      "enabled": true,
+      "scenarios": [
+        {
+          "type": "invalidHttpMethod",
+          "method": "INVALID_METHOD",
+          "expectedHandling": "methodNotAllowed"
+        },
+        {
+          "type": "oversizedHeaders",
+          "headerSize": 8192,
+          "expectedHandling": "requestHeaderFieldsTooLarge"
+        },
+        {
+          "type": "malformedHttpVersion",
+          "httpVersion": "HTTP/0.9",
+          "expectedHandling": "httpVersionNotSupported"
+        }
+      ]
+    },
+    "boundaryConditions": {
+      "enabled": true,
+      "scenarios": [
+        {
+          "type": "minimumRequest",
+          "description": "Test with minimal valid HTTP request"
+        },
+        {
+          "type": "maximumRequestSize",
+          "description": "Test with maximum allowable request size"
+        },
+        {
+          "type": "rapidConnections",
+          "description": "Test rapid connection establishment and teardown"
+        }
+      ]
+    }
+  },
+  "loggingConfiguration": {
+    "captureConsoleOutput": true,
+    "logLevel": "info",
+    "includeTimestamps": false,
+    "validateLogFormat": true,
+    "expectedLogPatterns": [
+      {
+        "pattern": "Server running at http://127.0.0.1:3000/",
+        "phase": "startup",
+        "required": true
+      }
+    ]
+  },
+  "networkConfiguration": {
+    "interface": {
+      "type": "localhost",
+      "address": "127.0.0.1",
+      "family": "IPv4",
+      "validateBinding": true
+    },
+    "port": {
+      "number": 3000,
+      "validateAvailability": true,
+      "allowDynamicAllocation": false,
+      "reserveForTesting": true
+    }
+  },
+  "testUtilities": {
+    "serverHelpers": {
+      "createTestServer": true,
+      "manageSingleInstance": true,
+      "cleanupAfterTests": true,
+      "isolateTestInstances": true
+    },
+    "portManagement": {
+      "checkPortAvailability": true,
+      "reserveTestPorts": true,
+      "cleanupPortReservations": true,
+      "validatePortRelease": true
+    },
+    "processManagement": {
+      "trackChildProcesses": true,
+      "ensureCleanTermination": true,
+      "preventZombieProcesses": true,
+      "validateResourceCleanup": true
+    }
+  },
+  "coverageRequirements": {
+    "lifecyclePhases": {
+      "startup": {
+        "required": true,
+        "scenarios": ["normal", "error", "edge_case"]
+      },
+      "operation": {
+        "required": true,
+        "scenarios": ["request_processing", "concurrent_handling"]
+      },
+      "shutdown": {
+        "required": true,
+        "scenarios": ["graceful", "forced", "error_during_shutdown"]
+      }
+    },
+    "errorPaths": {
+      "portConflicts": true,
+      "bindingFailures": true,
+      "processSignalHandling": true,
+      "resourceExhaustion": true
+    }
+  },
+  "integrationPoints": {
+    "testFramework": {
+      "supportedFrameworks": ["jest", "mocha"],
+      "configurationFiles": ["jest.config.js", ".mocharc.json"],
+      "coverageIntegration": true
+    },
+    "httpTesting": {
+      "library": "supertest",
+      "version": "^6.3.0",
+      "integration": "automatic"
+    },
+    "ciCdIntegration": {
+      "artifactGeneration": true,
+      "coverageReporting": true,
+      "performanceMetrics": true
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Server lifecycle configuration for comprehensive testing",
+    "lastUpdated": "2024-01-01",
+    "compatibleWith": {
+      "nodejs": ">=14.0.0",
+      "npm": ">=6.0.0"
+    },
+    "testingFrameworks": {
+      "jest": "^29.0.0",
+      "mocha": "^10.0.0",
+      "supertest": "^6.3.0"
+    }
+  }
+}

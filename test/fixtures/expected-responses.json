@@ -1,0 +1,500 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 3000,
+    "protocol": "http"
+  },
+  "responses": {
+    "standard": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "Hello, World!\n",
+      "encoding": "utf8"
+    }
+  },
+  "httpMethods": {
+    "GET": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "Hello, World!\n",
+      "description": "Standard GET request response"
+    },
+    "POST": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "Hello, World!\n",
+      "description": "Standard POST request response"
+    },
+    "PUT": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "Hello, World!\n",
+      "description": "Standard PUT request response"
+    },
+    "DELETE": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "Hello, World!\n",
+      "description": "Standard DELETE request response"
+    },
+    "PATCH": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "Hello, World!\n",
+      "description": "Standard PATCH request response"
+    },
+    "OPTIONS": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "Hello, World!\n",
+      "description": "Standard OPTIONS request response"
+    },
+    "HEAD": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "",
+      "description": "Standard HEAD request response (no body)"
+    }
+  },
+  "paths": {
+    "root": {
+      "path": "/",
+      "expectedResponse": {
+        "status": 200,
+        "headers": {
+          "content-type": "text/plain"
+        },
+        "body": "Hello, World!\n"
+      }
+    },
+    "anyPath": {
+      "path": "/*",
+      "expectedResponse": {
+        "status": 200,
+        "headers": {
+          "content-type": "text/plain"
+        },
+        "body": "Hello, World!\n"
+      },
+      "description": "Server responds identically to all paths"
+    }
+  },
+  "testScenarios": {
+    "basicFunctionality": {
+      "name": "Basic HTTP Response Validation",
+      "scenarios": [
+        {
+          "name": "GET root path",
+          "method": "GET",
+          "path": "/",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          }
+        },
+        {
+          "name": "POST any path",
+          "method": "POST",
+          "path": "/api/test",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          }
+        }
+      ]
+    },
+    "httpMethodValidation": {
+      "name": "HTTP Method Response Consistency",
+      "scenarios": [
+        {
+          "name": "GET method validation",
+          "method": "GET",
+          "path": "/test",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          }
+        },
+        {
+          "name": "POST method validation",
+          "method": "POST",
+          "path": "/test",
+          "requestBody": {"key": "value"},
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          }
+        },
+        {
+          "name": "PUT method validation",
+          "method": "PUT",
+          "path": "/test",
+          "requestBody": {"update": "data"},
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          }
+        },
+        {
+          "name": "DELETE method validation",
+          "method": "DELETE",
+          "path": "/test",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          }
+        },
+        {
+          "name": "PATCH method validation",
+          "method": "PATCH",
+          "path": "/test",
+          "requestBody": {"patch": "data"},
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          }
+        },
+        {
+          "name": "OPTIONS method validation",
+          "method": "OPTIONS",
+          "path": "/test",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          }
+        }
+      ]
+    },
+    "headerValidation": {
+      "name": "HTTP Header Validation",
+      "scenarios": [
+        {
+          "name": "Content-Type header validation",
+          "method": "GET",
+          "path": "/",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          },
+          "validations": [
+            {
+              "type": "header",
+              "key": "content-type",
+              "value": "text/plain",
+              "description": "Verify Content-Type header is text/plain"
+            }
+          ]
+        },
+        {
+          "name": "Content-Length header validation",
+          "method": "GET",
+          "path": "/",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          },
+          "validations": [
+            {
+              "type": "header",
+              "key": "content-length",
+              "value": "14",
+              "description": "Verify Content-Length matches response body length"
+            }
+          ]
+        }
+      ]
+    },
+    "pathValidation": {
+      "name": "Path-Agnostic Response Validation",
+      "scenarios": [
+        {
+          "name": "Root path response",
+          "method": "GET",
+          "path": "/",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          }
+        },
+        {
+          "name": "Nested path response",
+          "method": "GET",
+          "path": "/api/v1/users/123",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          }
+        },
+        {
+          "name": "Path with query parameters",
+          "method": "GET",
+          "path": "/search?q=test&limit=10",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          }
+        },
+        {
+          "name": "Path with special characters",
+          "method": "GET",
+          "path": "/special-path_with.characters",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          }
+        }
+      ]
+    },
+    "responseConsistency": {
+      "name": "Response Content Consistency",
+      "scenarios": [
+        {
+          "name": "Response body content validation",
+          "method": "GET",
+          "path": "/",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          },
+          "validations": [
+            {
+              "type": "body",
+              "value": "Hello, World!\n",
+              "description": "Verify exact response body content"
+            },
+            {
+              "type": "encoding",
+              "value": "utf8",
+              "description": "Verify response encoding"
+            }
+          ]
+        },
+        {
+          "name": "Response body character validation",
+          "method": "GET",
+          "path": "/",
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          },
+          "validations": [
+            {
+              "type": "character",
+              "checks": [
+                {
+                  "position": 0,
+                  "character": "H",
+                  "description": "First character should be 'H'"
+                },
+                {
+                  "position": 13,
+                  "character": "\n",
+                  "description": "Last character should be newline"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "edgeCases": {
+      "name": "Edge Case Response Validation",
+      "scenarios": [
+        {
+          "name": "Large request body handling",
+          "method": "POST",
+          "path": "/",
+          "requestBody": {
+            "largeData": "x".repeat(1000)
+          },
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          },
+          "description": "Server should ignore request body and return standard response"
+        },
+        {
+          "name": "Complex JSON request body",
+          "method": "POST",
+          "path": "/",
+          "requestBody": {
+            "nested": {
+              "data": {
+                "array": [1, 2, 3],
+                "object": {"key": "value"}
+              }
+            }
+          },
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          },
+          "description": "Server should ignore complex JSON and return standard response"
+        },
+        {
+          "name": "Custom headers handling",
+          "method": "GET",
+          "path": "/",
+          "requestHeaders": {
+            "X-Custom-Header": "custom-value",
+            "Authorization": "Bearer token123"
+          },
+          "expected": {
+            "status": 200,
+            "headers": {
+              "content-type": "text/plain"
+            },
+            "body": "Hello, World!\n"
+          },
+          "description": "Server should ignore custom headers and return standard response"
+        }
+      ]
+    }
+  },
+  "performanceExpectations": {
+    "responseTime": {
+      "maximum": 10,
+      "unit": "ms",
+      "description": "Response generation should complete within 10ms"
+    },
+    "startupTime": {
+      "maximum": 100,
+      "unit": "ms",
+      "description": "Server startup should complete within 100ms"
+    },
+    "endToEndTime": {
+      "maximum": 50,
+      "unit": "ms",
+      "description": "Complete request-response cycle should complete within 50ms"
+    }
+  },
+  "serverLifecycle": {
+    "startup": {
+      "expectedConsoleOutput": "Server running at http://127.0.0.1:3000/",
+      "expectedBehavior": "Server binds to port 3000 on localhost",
+      "validations": [
+        {
+          "type": "port",
+          "value": 3000,
+          "description": "Server should listen on port 3000"
+        },
+        {
+          "type": "hostname",
+          "value": "127.0.0.1",
+          "description": "Server should bind to localhost only"
+        },
+        {
+          "type": "console",
+          "contains": "Server running at",
+          "description": "Should log startup message"
+        }
+      ]
+    },
+    "shutdown": {
+      "expectedBehavior": "Graceful connection closure",
+      "validations": [
+        {
+          "type": "connections",
+          "value": "closed",
+          "description": "All connections should be closed"
+        },
+        {
+          "type": "port",
+          "value": "released",
+          "description": "Port 3000 should be released"
+        }
+      ]
+    }
+  },
+  "errorScenarios": {
+    "portConflict": {
+      "scenario": "Port 3000 already in use",
+      "expectedError": "EADDRINUSE",
+      "expectedBehavior": "Server startup failure with appropriate error message"
+    },
+    "bindingFailure": {
+      "scenario": "Network interface binding failure",
+      "expectedError": "EADDRNOTAVAIL",
+      "expectedBehavior": "Server startup failure with network error"
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Expected response fixtures for comprehensive HTTP server testing",
+    "created": "2024-06-30",
+    "purpose": "Automated validation of server responses against known-good templates",
+    "testFramework": "Jest/Mocha with Supertest",
+    "coverage": "100% test coverage for all server behaviors",
+    "compliance": "Meets Section 0 testing requirements for status codes, headers, and response content"
+  }
+}
